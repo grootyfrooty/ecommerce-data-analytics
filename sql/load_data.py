@@ -1,12 +1,12 @@
 from sqlalchemy import create_engine
 import pandas as pd
+import os
+from dotenv import load_dotenv
 
-# Connection details
+load_dotenv()
+
 username = "postgres"
-password = "1234"
-host = "localhost"
-port = "5432"
-database = "ecommerce_dataana"
+password = os.getenv("DB_PASSWORD")
 
 # Build the connection string
 engine = create_engine(f"postgresql://{username}:{password}@{host}:{port}/{database}")
