@@ -7,6 +7,9 @@ load_dotenv()
 
 username = "postgres"
 password = os.getenv("DB_PASSWORD")
+host = "localhost"
+port = "5432"
+database = "ecommerce_dataana"
 
 # Build the connection string
 engine = create_engine(f"postgresql://{username}:{password}@{host}:{port}/{database}")
