@@ -44,7 +44,7 @@ built a Python ETL script to clean and load the data.
   pandas + sqlalchemy to clean and load the CSVs into Postgres
 
 ### Schema
-![ERD](images/erd.png)
+![ERD](images/preview:erd.png)
 
 ### Key Learnings
 - **Column name mismatches** between raw CSV headers and SQL schema caused 
