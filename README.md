@@ -98,7 +98,7 @@ states, and time.
 - PostgreSQL — relational database, schema design
 - Python (pandas, sqlalchemy, matplotlib) — ETL and EDA
 - python-dotenv — secure credential handling
-- [Coming] SQL — advanced analysis queries
+- Wrote advanced SQL queries — window functions and CTEs, validated against Python EDA
 - [Coming] Power BI — dashboard
 
 ## Key Learnings
@@ -108,3 +108,30 @@ pipeline, and letting the data itself (not assumptions) drive analytical
 decisions. Debugging real environment issues (credential security, 
 case-sensitivity, working directory mismatches) turned out to be as valuable 
 a learning experience as the analysis itself.
+
+
+## Phase 3: Advanced SQL
+
+Wrote advanced SQL queries directly against the PostgreSQL database, 
+using window functions and CTEs to validate and extend the Python EDA findings.
+
+### Queries
+1. **Running total of monthly revenue** — window function (`SUM() OVER`) 
+   tracking cumulative revenue growth across the year
+2. **State revenue ranking** — window function (`RANK() OVER`) ranking 
+   all 18 states by total revenue
+3. **Loss-making states by category** — a 3-step CTE chain identifying 
+   which states have negative profit, then breaking down which category 
+   drives the loss in each (Furniture in Andhra Pradesh/Tamil Nadu, 
+   Electronics in Bihar/Punjab) — confirming the same finding from the 
+   Python EDA phase
+
+**Queries:** [`sql/analysis_queries.sql`](sql/analysis_queries.sql)
+
+### Key Learnings
+- Window functions (`OVER`) let you calculate running totals and rankings 
+  **without** collapsing rows the way `GROUP BY` does — useful when you need 
+  both the detail and the aggregate in the same result
+- `WHERE` can't filter on aggregated columns (like `SUM()`) directly, since 
+  it runs before grouping happens — CTEs (or `HAVING`) solve this
+- CTEs are most
