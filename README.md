@@ -209,6 +209,11 @@ Revenue by state, Top 10 cities by revenue.
 Revenue vs Profit by category, Top sub-categories by revenue.
 ![Category Deep Dive](images/dashboard/page3_category_deepdive.png)
 
+## Power-BI 
+📄 [`powerbi/ecommerceindianretail.pbix`](powerbi/ecommerceindianretail.pbix) — open in Power BI Desktop to explore interactively
+
+
+
 **Key learnings**
 - DAX calculated columns need a **sort-by column** (e.g. `MonthYearSort`) to order text labels chronologically — text sorts alphabetically by default
 - `DISTINCTCOUNT()` is essential for accurate order counts in a table with multiple rows per order
