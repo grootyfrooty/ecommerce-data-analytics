@@ -22,8 +22,8 @@ SQL analysis, and an interactive Power BI dashboard.
 2. Built a Python ETL script to clean and load CSV data into Postgres
 3. Performed EDA in Python — merged tables, analyzed revenue/profit trends 
    by category, state, and time; validated findings against sales targets
-4. [Coming] SQL analysis — advanced queries (window functions, CTEs)
-5. [Coming] Power BI dashboard
+4. Wrote advanced SQL queries — window functions and CTEs, validated against Python EDA
+5. Built an interactive Power BI dashboard connected to the Supabase-hosted database
 
 ## Phase 1: Database Design & Data Loading
 
@@ -135,3 +135,94 @@ using window functions and CTEs to validate and extend the Python EDA findings.
 - `WHERE` can't filter on aggregated columns (like `SUM()`) directly, since 
   it runs before grouping happens — CTEs (or `HAVING`) solve this
 - CTEs are most
+
+
+
+---
+
+## Phase 1 — Database Design & ETL
+
+Designed a normalized 3-table PostgreSQL schema, then built a Python script to clean and load raw CSVs into it.
+
+- `list_of_orders` — one row per order (dimension)
+- `order_details` — one row per line item, FK to orders (fact)
+- `sales_target` — monthly targets per category
+
+![ERD](images/erd.png)
+
+**Key learnings**
+- Column name mismatches between CSV headers and SQL schema caused silent `to_sql()` failures
+- Postgres lowercases unquoted identifiers — caused case-sensitivity bugs with pandas
+- Always parse dates with explicit `dayfirst=True` for `DD-MM-YYYY` formats
+- Never hardcode credentials — moved to `.env` (gitignored)
+
+📄 [`sql/schema.sql`](sql/schema.sql) · [`sql/load_data.py`](sql/load_data.py)
+
+---
+
+## Phase 2 — Python EDA
+
+Merged the three tables in pandas and explored revenue, profit, and target performance.
+
+**Key findings**
+- 📊 **Revenue ≠ profit.** Electronics leads revenue; Clothing leads profit margin; Furniture has the weakest margin despite strong revenue
+- 🗺️ **Revenue is concentrated.** Madhya Pradesh + Maharashtra = ~45% of total revenue
+- 🔻 **4 states are profit-negative** despite generating revenue: Tamil Nadu, Punjab, Andhra Pradesh, Bihar — driven by Furniture (AP/TN) and Electronics (Bihar/Punjab)
+- 📉 **July 2018 revenue dip** traced to smaller basket sizes, not fewer customers — Clothing (21% of target) and Furniture (32%) nearly collapsed that month
+
+📄 [`notebooks/01_eda.ipynb`](notebooks/01_eda.ipynb)
+
+---
+
+## Phase 3 — Advanced SQL
+
+Window functions and CTEs, validated against the Python findings.
+
+- **Running monthly revenue total** — `SUM() OVER (ORDER BY month)`
+- **State revenue ranking** — `RANK() OVER (ORDER BY revenue DESC)`
+- **Loss-making states by category** — 3-step CTE chain isolating which category drives losses in each negative-profit state
+
+**Key learnings**
+- Window functions preserve row-level detail while still aggregating — unlike `GROUP BY`
+- `WHERE` can't filter on aggregates — CTEs (or `HAVING`) solve this
+- CTEs pay off most in multi-step, chained logic
+
+📄 [`sql/analysis_queries.sql`](sql/analysis_queries.sql)
+
+---
+
+## Phase 4 — Power BI Dashboard
+
+Built a 3-page interactive dashboard connected live to the Supabase-hosted PostgreSQL database.
+
+> **Migration note:** the local Postgres database was migrated to Supabase (`pg_dump` → `pg_restore`) so Power BI could connect remotely — local databases aren't reachable from cloud/remote Power BI environments without extra networking.
+
+### Page 1 — Executive KPI Summary
+Total Revenue, Total Profit, Total Orders, Average Order Value + monthly revenue trend.
+![Executive Summary](images/dashboard/page1_executive_summary.png)
+
+### Page 2 — Regional Performance
+Revenue by state, Top 10 cities by revenue.
+![Regional Performance](images/dashboard/page2_regional_performance.png)
+
+### Page 3 — Category Deep Dive
+Revenue vs Profit by category, Top sub-categories by revenue.
+![Category Deep Dive](images/dashboard/page3_category_deepdive.png)
+
+**Key learnings**
+- DAX calculated columns need a **sort-by column** (e.g. `MonthYearSort`) to order text labels chronologically — text sorts alphabetically by default
+- `DISTINCTCOUNT()` is essential for accurate order counts in a table with multiple rows per order
+- Power BI Desktop is Windows-only — connected via Azure RDP, which required migrating the database to a cloud-reachable host (Supabase)
+
+---
+
+## Overall Key Learnings
+- Learned to migrate a local PostgreSQL database to a managed cloud instance 
+  (Supabase) using `pg_dump`/`pg_restore` — a common real-world step when 
+  moving from local development to a deployed/shared environment
+This project reinforced the full analytics pipeline: schema design → ETL → 
+EDA → SQL → BI — and let the data drive every conclusion rather than 
+assumptions. A large share of the real learning came from debugging actual 
+environment issues (credential security, case-sensitivity, cross-network 
+database access) — the kind of problem-solving that doesn't show up in a 
+tutorial but is core to real analyst work.
